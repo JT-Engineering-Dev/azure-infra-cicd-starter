@@ -1,27 +1,20 @@
-name: terraform-plan
+name: terraform-destroy
 
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Environment to run against"
+        description: "Environment to destroy"
         type: choice
         options:
           - dev
         default: dev
-      command:
-        description: "Terraform command"
-        type: choice
-        options:
-          - plan
-          - plan-apply
-        default: plan
 
 permissions:
   contents: read
 
 jobs:
-  terraform:
+  terraform-destroy:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,10 +29,10 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
-      - name: Terraform orchestrator
+      - name: Terraform destroy
         uses: JT-Engineering-Dev/terraform-orchestrator-action@v0.1.0
         with:
           working-directory: terraform
           workspace: ${{ github.event.inputs.environment }}
           var-file: environments/${{ github.event.inputs.environment }}.tfvars
-          command: ${{ github.event.inputs.command }}
+          command: destroy
