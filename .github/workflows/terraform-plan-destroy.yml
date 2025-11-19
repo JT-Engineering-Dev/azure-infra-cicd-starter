@@ -1,4 +1,4 @@
-name: terraform-destroy
+name: terraform-plan-destroy
 
 on:
   workflow_dispatch:

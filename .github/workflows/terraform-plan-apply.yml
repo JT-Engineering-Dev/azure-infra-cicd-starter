@@ -1,4 +1,4 @@
-name: terraform-plan
+name: terraform-plan-apply
 
 on:
   workflow_dispatch:
