@@ -11,7 +11,6 @@ resource "azurerm_container_app_environment" "cae" {
   name                = "${var.prefix}-cae"
   location            = var.location
   resource_group_name = var.resource_group_name
-  internal_load_balancer_enabled = false
   tags                = var.tags
   depends_on = [azurerm_container_registry.acr]
 }
