@@ -1,0 +1,49 @@
+name: terraform-plan
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run against"
+        type: choice
+        options:
+          - dev
+          - prod
+        default: dev
+      command:
+        description: "Terraform command"
+        type: choice
+        options:
+          - plan
+          - plan-apply
+        default: plan
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 🔐 Customer-provided Azure credentials as GitHub secrets
+      - name: Azure login (service principal)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      # 🧠 Shared Terraform orchestrator
+      - name: Terraform orchestrator
+        uses: JT-Engineering-Dev/terraform-orchestrator-action@v0.1.0
+        with:
+          working-directory: terraform
+          workspace: ${{ github.event.inputs.environment }}
+          var-file: environments/${{ github.event.inputs.environment }}.tfvars
+          command: ${{ github.event.inputs.command }}
+
