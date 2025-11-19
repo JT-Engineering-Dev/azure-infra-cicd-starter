@@ -30,7 +30,7 @@ jobs:
           client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: Terraform destroy
-        uses: JT-Engineering-Dev/terraform-orchestrator-action@v0.1.0
+        uses: JT-Engineering-Dev/terraform-orchestrator-action@v0.2.0
         with:
           working-directory: terraform
           workspace: ${{ github.event.inputs.environment }}
