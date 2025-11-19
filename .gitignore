@@ -1,0 +1,9 @@
+# Terraform state
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Local tooling
+.env
+

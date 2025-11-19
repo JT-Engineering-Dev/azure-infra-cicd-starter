@@ -43,3 +43,4 @@ jobs:
           workspace: ${{ github.event.inputs.environment }}
           var-file: environments/${{ github.event.inputs.environment }}.tfvars
           command: ${{ github.event.inputs.command }}
+          backend-config-file: backend.config

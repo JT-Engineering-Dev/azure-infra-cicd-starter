@@ -1,23 +1,25 @@
 # 🚀 Azure Infra + CI/CD Starter (Terraform + GitHub Actions)
-### A lightweight, production-grade Azure foundation for teams starting fresh.
+### Push-button Azure infrastructure for junior-to-mid engineers.
 
-This project gives you a clean, opinionated, repeatable Azure infrastructure starter built with Terraform, integrated with GitHub Actions, and optimized for low cost + fast iteration.
+This starter packs the Terraform modules, GitHub workflows, and documentation you need to ship a production-ready Azure landing zone with minimal manual setup. It is intentionally boring, modular, and easy to extend.
 
-It includes:
-- Modular Terraform structure
-- Azure Resource Group + VNet + Subnets
-- Azure Container Registry (ACR)
-- Container Apps Environment (CAE)
-- Log Analytics Workspace (LAW)
-- Diagnostic settings (ACR → LAW)
-- GitHub Actions for plan/apply/destroy
+## ✅ What you get
+- Remote-state-ready Terraform baseline (networking, observability, container artifacts, application hosting)
+- Clean module boundaries with `.tfvars` driven inputs
+- GitHub Actions workflows that call the shared **Terraform Orchestrator** Marketplace Action
+- Service Principal based auth today, OIDC ready tomorrow
+- GumRoad-friendly docs + diagrams you can hand to customers or teammates
 
 ---
 
-## 🧱 Architecture Diagram (Mermaid)
+## 🧱 Architecture Diagram
 
 ```mermaid
 flowchart TD
+  subgraph TFSTATE["Azure Storage: tfstate backend"]
+    STATE["azurerm backend (Blob Storage)"]
+  end
+
   subgraph RG["Resource Group: PREFIX-rg"]
     VNET["Virtual Network: PREFIX-vnet"]
     SUBS["Subnets: apps, system"]
@@ -26,6 +28,7 @@ flowchart TD
     CAE["Container Apps Environment: PREFIX-cae"]
   end
 
+  STATE -->|remote state| Terraform
   ACR -->|Diagnostics| LAW
   VNET --> SUBS
   CAE --> VNET
@@ -33,64 +36,99 @@ flowchart TD
 
 ---
 
-## 🏃‍♂️ Quickstart
+## 🏁 Quickstart
 
-### 1. Authenticate to Azure
-```bash
-az login
-az account set --subscription "<YOUR_SUBSCRIPTION_ID>"
-```
+1. **Bootstrap remote state**  
+   Follow [`docs/BOOTSTRAP_BACKEND.md`](docs/BOOTSTRAP_BACKEND.md) to create the Storage Account/Container, grant access, and copy `terraform/backend.config.example` → `terraform/backend.config`.
 
-### 2. Deploy Dev Environment
-```bash
-cd terraform
-terraform init
-terraform workspace new dev || terraform workspace select dev
-terraform plan -var-file=environments/dev.tfvars
-terraform apply -var-file=environments/dev.tfvars -auto-approve
-```
+2. **Create Azure Service Principal**  
+   ```bash
+   az ad sp create-for-rbac \
+     --name "jteng-gha" \
+     --role Contributor \
+     --scopes "/subscriptions/<SUB_ID>" \
+     --sdk-auth
+   ```
+   Add these secrets in your repo → *Settings → Secrets and variables → Actions*:
+   - `AZURE_CLIENT_ID`
+   - `AZURE_CLIENT_SECRET`
+   - `AZURE_TENANT_ID`
+   - `AZURE_SUBSCRIPTION_ID`
 
-### 3. Destroy
-```bash
-terraform destroy -var-file=environments/dev.tfvars -auto-approve
-```
+3. **Authenticate locally (optional sanity check)**  
+   ```bash
+   az login
+   az account set --subscription "<YOUR_SUBSCRIPTION_ID>"
+   cd terraform
+   terraform init -backend-config=backend.config
+   terraform workspace new dev || terraform workspace select dev
+   terraform plan -var-file=environments/dev.tfvars
+   terraform apply -var-file=environments/dev.tfvars -auto-approve
+   ```
 
----
-
-## 🔐 GitHub Actions Setup
-
-### 1. Create Service Principal
-```bash
-az ad sp create-for-rbac   --name "jteng-gha"   --role Contributor   --scopes "/subscriptions/<SUB_ID>"   --sdk-auth
-```
-
-Add to GitHub Secrets:
-- AZURE_CLIENT_ID
-- AZURE_CLIENT_SECRET
-- AZURE_TENANT_ID
-- AZURE_SUBSCRIPTION_ID
-
-### 2. Workflows included
-- terraform-plan-apply.yml
-- terraform-destroy.yml
+4. **Run via GitHub Actions**  
+   - `terraform-plan.yml` – plan only  
+   - `terraform-plan-apply.yml` – plan or plan+apply (workflow input)  
+   - `terraform-destroy.yml` – destroys a chosen workspace  
+   Trigger them with **Run workflow** → select `environment` + `command`.
 
 ---
 
-## 💰 Cost Considerations
-| Resource | Cost |
-|---------|------|
-| ACR Basic | ~$0.17/day |
-| CAE | Minimal if unused |
-| Log Analytics | Minimal until ingestion |
+## ⚙️ Workflow Inputs (workflow_dispatch)
+| Input | Values | Description |
+| --- | --- | --- |
+| `environment` | `dev`, `prod` (extend as needed) | Sets Terraform workspace + tfvars file |
+| `command` | `plan`, `plan-apply` | `plan-apply` runs plan → apply; `plan` only outputs |
+
+Destroy workflow only asks for `environment` and always runs `terraform destroy`.
 
 ---
 
-## 🧩 Roadmap
+## 🧩 Terraform Modules
+| Module | Path | Purpose |
+| --- | --- | --- |
+| Networking | `terraform/modules/network` | VNet + subnets |
+| Observability | `terraform/modules/observability` | Log Analytics workspace |
+| Container artifacts | `terraform/modules/container_artifacts` | Azure Container Registry + diagnostics + Container Apps Environment |
+
+All inputs are wired through `terraform/environments/*.tfvars` so you stay DRY across workspaces.
+
+---
+
+## ☁️ Remote Backend Expectations
+- `terraform/backend.config` stores backend settings (resource group, storage account, container, key).  
+- GitHub Actions pass this file to the orchestrator so every runner shares state.  
+- Grant your Service Principal **Storage Blob Data Contributor** on the storage account. (`docs/BOOTSTRAP_BACKEND.md` walks through everything.)
+
+Until you create the backend file, workflows fall back to local state (useful for quick experiments, but remote is required for production).
+
+---
+
+## 🔐 Auth Today, OIDC Tomorrow
+- V1 uses Service Principal secrets for simplicity.  
+- Future release will add Federated Credentials (OIDC) so secrets disappear. The orchestrator/action layout already supports that swap.
+
+---
+
+## 💰 Cost Snapshot
+| Resource | Cost Notes |
+| --- | --- |
+| ACR Basic | ~\$0.17/day when idle |
+| Container Apps Environment | Minimal while empty |
+| Log Analytics | Charged on ingestion/retention |
+| Storage Account (tfstate) | Pennies/month |
+
+Destroy dev workspaces when idle to keep spend near-zero.
+
+---
+
+## 🗺️ Roadmap
 - Key Vault module  
-- Private Endpoints  
-- AWS/GCP equivalents  
-- OIDC auth option  
-- Microservice deployment sample  
+- Private Endpoints + Private DNS  
+- AWS/GCP starter kits (reuse orchestrator)  
+- Federated credentials (OIDC)  
+- Sample microservice deployment into CAE  
+- Optional add-on modules sold via GumRoad
 
 ---
 

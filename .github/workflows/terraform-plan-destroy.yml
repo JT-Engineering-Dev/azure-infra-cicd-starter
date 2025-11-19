@@ -36,3 +36,4 @@ jobs:
           workspace: ${{ github.event.inputs.environment }}
           var-file: environments/${{ github.event.inputs.environment }}.tfvars
           command: destroy
+          backend-config-file: backend.config
