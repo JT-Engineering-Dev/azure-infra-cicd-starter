@@ -1,7 +1,7 @@
 prefix   = "cae-starter"
-location = "eastus"
+location = "centralus"
 tags = {
-  owner = "owner"
+  owner = "JT Engineering, LLC"
   env   = "dev"
 }
 acr_sku  = "Basic"
