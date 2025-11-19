@@ -34,7 +34,7 @@ jobs:
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          auth-type: service-principal
+          auth-type: service_principal
 
       # 🧠 Shared Terraform orchestrator
       - name: Terraform orchestrator
