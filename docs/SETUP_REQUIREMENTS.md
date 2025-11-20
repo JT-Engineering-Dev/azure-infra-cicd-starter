@@ -10,8 +10,11 @@ TFSTATE_LOCATION="eastus"
 TFSTATE_RG="jteng-tfstate-rg"
 TFSTATE_SA="jtengtfstate01"
 TFSTATE_CONTAINER="tfstate"
-SP_OBJECT_ID="<service-principal-object-id>"   # az ad sp show --id <CLIENT_ID> --query id -o tsv
 SUBSCRIPTION_ID="<YOUR_SUBSCRIPTION_ID>"
+
+# service principal object id (from README quickstart Step 1)
+AZURE_CLIENT_ID="<YOUR_SP_CLIENT_ID>"
+SP_OBJECT_ID=$(az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv)
 ```
 
 ## 2. Create the resource group + storage account + container
