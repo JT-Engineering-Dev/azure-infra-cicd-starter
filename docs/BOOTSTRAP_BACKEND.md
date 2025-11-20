@@ -76,3 +76,7 @@ use_azuread_auth     = true
 The repo workflows already pass `backend-config-file: backend.config` to the orchestrator action. As soon as the file exists in `terraform/`, every run will use remote state automatically.
 
 If you prefer a different path or multiple backends per environment, update the workflow input accordingly.
+
+### ARM_* environment variables
+
+The workflows export `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_TENANT_ID`, and `ARM_SUBSCRIPTION_ID` from your GitHub secrets before calling Terraform. If you rename secrets or use different credential names, update the workflow environment so the backend can authenticate using the same Service Principal.

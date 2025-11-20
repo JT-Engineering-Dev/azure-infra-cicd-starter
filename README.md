@@ -99,6 +99,7 @@ All inputs are wired through `terraform/environments/*.tfvars` so you stay DRY a
 - `terraform/backend.config` stores backend settings (resource group, storage account, container, key).  
 - GitHub Actions pass this file to the orchestrator so every runner shares state.  
 - Grant your Service Principal **Storage Blob Data Contributor** on the storage account. (`docs/BOOTSTRAP_BACKEND.md` walks through everything.)
+- The workflows export `ARM_CLIENT_ID/SECRET/TENANT_ID/SUBSCRIPTION_ID` from your GitHub secrets so Terraform authenticates the backend with the same Service Principal. Keep those four secrets fresh and you’re done.
 
 Until you create the backend file, workflows fall back to local state (useful for quick experiments, but remote is required for production).
 
