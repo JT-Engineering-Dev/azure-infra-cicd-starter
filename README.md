@@ -38,10 +38,7 @@ flowchart TD
 
 ## 🏁 Quickstart
 
-1. **Bootstrap remote state**  
-   Follow [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md) to provision the Azure Storage backend (resource group + storage account + container) and copy `terraform/backend.config.example` → `terraform/backend.config`.
-
-2. **Create Azure Service Principal**  
+1. **Create Azure Service Principal**  
    ```bash
    az ad sp create-for-rbac \
      --name "jteng-gha" \
@@ -54,6 +51,9 @@ flowchart TD
    - `AZURE_CLIENT_SECRET`
    - `AZURE_TENANT_ID`
    - `AZURE_SUBSCRIPTION_ID`
+
+2. **Bootstrap remote state**  
+   After you have the Service Principal (so you know its object ID), follow [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md) to provision the Azure Storage backend (resource group + storage account + container), grant the SP blob access, and copy `terraform/backend.config.example` → `terraform/backend.config`.
 
 3. **Authenticate locally (optional sanity check)**  
    ```bash
