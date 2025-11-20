@@ -99,7 +99,7 @@ All inputs are wired through `terraform/environments/*.tfvars` so you stay DRY a
 ## ☁️ Remote Backend Expectations
 - `terraform/backend.config` stores the Terraform Cloud organization and workspace mapping.  
 - GitHub Actions pass this file to the orchestrator so every runner shares the same remote state.  
-- Add a GitHub secret named `TF_API_TOKEN` containing a Terraform Cloud user token; workflows set it as `TF_API_TOKEN` for terraform init.  
+- Add a GitHub secret named `TF_API_TOKEN` containing a Terraform Cloud user token; workflows automatically expose it as both `TF_API_TOKEN` **and** `TF_TOKEN_app_terraform_io` so Terraform Cloud accepts it.  
 - The workflows also export `ARM_CLIENT_ID/SECRET/TENANT_ID/SUBSCRIPTION_ID` from your GitHub secrets so the Azure provider can authenticate with your Service Principal.
 
 Until you create the backend file, workflows fall back to local state (useful for quick experiments, but remote is required for production so destroy works anywhere).

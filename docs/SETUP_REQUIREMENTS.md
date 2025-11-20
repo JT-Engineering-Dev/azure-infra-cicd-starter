@@ -25,7 +25,7 @@ This repo’s backend config expects the prefix `azure-infra-cicd-`. With that p
 2. Create a new token (name it something like `github-actions`)
 3. Copy the token and add it to your GitHub repo secrets as `TF_API_TOKEN`
 
-> Every workflow already exports `TF_API_TOKEN` for the orchestrator. No other secrets are needed for state access.
+> The workflows export this secret as both `TF_API_TOKEN` and the hostname-specific `TF_TOKEN_app_terraform_io`, so Terraform authenticates without running `terraform login`.
 
 ## 5. Create `terraform/backend.config`
 Copy the example file and set your organization/prefix (or workspace names if you prefer exact names):
