@@ -2,8 +2,8 @@
 
 Run through this page once per subscription to give Terraform a remote home for its state. After that, the GitHub workflows can plan/apply/destroy without any extra clicks.
 
-## 1. Pick your names
-Set these to whatever fits your org (storage account names must be globally unique, lowercase, 3–24 chars).
+## 1. Define your naming variables
+These shell variables just make the copy/paste commands easier. Set them to whatever fits your environment (storage account names must be globally unique, lowercase, 3–24 chars). They are **not** GitHub secrets—just local values for the next CLI steps.
 
 ```bash
 TFSTATE_LOCATION="eastus"
