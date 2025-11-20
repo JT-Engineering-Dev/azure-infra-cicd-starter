@@ -40,7 +40,7 @@ Example contents:
 hostname     = "app.terraform.io"
 organization = "jtengineering"
 
-workspaces = {
+workspaces {
   prefix = "azure-infra-cicd-"
 }
 ```
@@ -48,7 +48,7 @@ workspaces = {
 If you want to pin explicit workspace names instead of prefixes, replace the block with:
 
 ```hcl
-workspaces = {
+workspaces {
   name = "azure-infra-cicd-dev"
 }
 ```

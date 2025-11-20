@@ -3,6 +3,6 @@ hostname     = "app.terraform.io"
 organization = "CHANGE_ME_ORG"
 
 # Workspaces are derived from terraform workspace name (e.g., dev -> azure-infra-dev)
-workspaces = {
+workspaces {
   prefix = "azure-infra-cicd-"
 }
