@@ -16,8 +16,8 @@ This starter packs the Terraform modules, GitHub workflows, and documentation yo
 
 ```mermaid
 flowchart TD
-  subgraph TFSTATE["Terraform Cloud (remote state)"]
-    STATE["Remote backend (TFC)"]
+  subgraph TFSTATE["Azure Storage: tfstate backend"]
+    STATE["azurerm backend (Blob Storage)"]
   end
 
   subgraph RG["Resource Group: PREFIX-rg"]
@@ -39,7 +39,7 @@ flowchart TD
 ## 🏁 Quickstart
 
 1. **Bootstrap remote state**  
-   Follow [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md) to point Terraform at your Terraform Cloud organization/workspaces (CLI-driven workflow per environment) and copy `terraform/backend.config.example` → `terraform/backend.config`.
+   Follow [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md) to provision the Azure Storage backend (resource group + storage account + container) and copy `terraform/backend.config.example` → `terraform/backend.config`.
 
 2. **Create Azure Service Principal**  
    ```bash
@@ -54,7 +54,6 @@ flowchart TD
    - `AZURE_CLIENT_SECRET`
    - `AZURE_TENANT_ID`
    - `AZURE_SUBSCRIPTION_ID`
-   - `TF_API_TOKEN` (Terraform Cloud user token)
 
 3. **Authenticate locally (optional sanity check)**  
    ```bash
@@ -96,13 +95,45 @@ All inputs are wired through `terraform/environments/*.tfvars` so you stay DRY a
 
 ---
 
-## ☁️ Remote Backend Expectations
-- `terraform/backend.config` stores the Terraform Cloud organization and workspace mapping.  
-- GitHub Actions pass this file to the orchestrator so every runner shares the same remote state.  
-- Add a GitHub secret named `TF_API_TOKEN` containing a Terraform Cloud user token; workflows automatically expose it as both `TF_API_TOKEN` **and** `TF_TOKEN_app_terraform_io` so Terraform Cloud accepts it.  
-- The workflows also export `ARM_CLIENT_ID/SECRET/TENANT_ID/SUBSCRIPTION_ID` from your GitHub secrets so the Azure provider can authenticate with your Service Principal.
+## ☁️ Backend Setup (Azure Storage)
+- Terraform keeps its state in a Storage Account so every GitHub job sees the same resources and `destroy` works reliably.
+- Run the one-time bootstrap below (or copy it from [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md)), then copy `terraform/backend.config.example` to `terraform/backend.config` and update the names. Terraform automatically creates separate blobs per workspace (e.g., `env:dev/azure-infra-cicd-starter.tfstate`), so you only need one config file.
 
-Until you create the backend file, workflows fall back to local state (useful for quick experiments, but remote is required for production so destroy works anywhere).
+```bash
+TFSTATE_LOCATION="eastus"
+TFSTATE_RG="jteng-tfstate-rg"
+TFSTATE_SA="jtengtfstate01"
+TFSTATE_CONTAINER="tfstate"
+SP_OBJECT_ID="<service-principal-object-id>"
+SUBSCRIPTION_ID="<YOUR_SUBSCRIPTION_ID>"
+
+az group create --name "$TFSTATE_RG" --location "$TFSTATE_LOCATION"
+
+az storage account create \
+  --name "$TFSTATE_SA" \
+  --resource-group "$TFSTATE_RG" \
+  --location "$TFSTATE_LOCATION" \
+  --sku Standard_LRS \
+  --kind StorageV2 \
+  --allow-blob-public-access false
+
+az storage container create \
+  --name "$TFSTATE_CONTAINER" \
+  --account-name "$TFSTATE_SA"
+
+az role assignment create \
+  --role "Storage Blob Data Contributor" \
+  --assignee-object-id "$SP_OBJECT_ID" \
+  --assignee-principal-type ServicePrincipal \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$TFSTATE_RG/providers/Microsoft.Storage/storageAccounts/$TFSTATE_SA"
+```
+
+The workflows reuse the same Azure login from `azure/login@v2`, so no extra secrets or SAS tokens are necessary. If `backend.config` is missing, Terraform falls back to local state (fine for experimentation, but remote is required for production).
+
+## ⚙️ What the workflows do
+- Each workflow checks out the repo, logs in to Azure with your Service Principal, and runs Terraform **on the GitHub runner** using `terraform/environments/<env>.tfvars`.
+- State is stored in the Storage Account you bootstrapped above (`azure-infra-cicd-starter-<workspace>.tfstate` keys). Plan, apply, and destroy all share that state so resource changes stay consistent.
+- To change infrastructure, edit the tfvars file (e.g., switch the prefix, location, SKUs), commit, and rerun the workflow for that environment. Terraform handles the diff automatically.
 
 ---
 
