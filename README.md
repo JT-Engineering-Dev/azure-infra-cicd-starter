@@ -16,8 +16,8 @@ This starter packs the Terraform modules, GitHub workflows, and documentation yo
 
 ```mermaid
 flowchart TD
-  subgraph TFSTATE["Azure Storage: tfstate backend"]
-    STATE["azurerm backend (Blob Storage)"]
+  subgraph TFSTATE["Terraform Cloud (remote state)"]
+    STATE["Remote backend (TFC)"]
   end
 
   subgraph RG["Resource Group: PREFIX-rg"]
@@ -28,7 +28,7 @@ flowchart TD
     CAE["Container Apps Environment: PREFIX-cae"]
   end
 
-  STATE -->|remote state| Terraform
+  STATE -->|state + locking| Terraform
   ACR -->|Diagnostics| LAW
   VNET --> SUBS
   CAE --> VNET
@@ -39,7 +39,7 @@ flowchart TD
 ## 🏁 Quickstart
 
 1. **Bootstrap remote state**  
-   Follow [`docs/BOOTSTRAP_BACKEND.md`](docs/BOOTSTRAP_BACKEND.md) to create the Storage Account/Container, grant access, and copy `terraform/backend.config.example` → `terraform/backend.config`.
+   Follow [`docs/BOOTSTRAP_BACKEND.md`](docs/BOOTSTRAP_BACKEND.md) to point Terraform at your Terraform Cloud organization/workspaces and copy `terraform/backend.config.example` → `terraform/backend.config`.
 
 2. **Create Azure Service Principal**  
    ```bash
@@ -54,6 +54,7 @@ flowchart TD
    - `AZURE_CLIENT_SECRET`
    - `AZURE_TENANT_ID`
    - `AZURE_SUBSCRIPTION_ID`
+   - `TF_API_TOKEN` (Terraform Cloud user token)
 
 3. **Authenticate locally (optional sanity check)**  
    ```bash
@@ -96,12 +97,12 @@ All inputs are wired through `terraform/environments/*.tfvars` so you stay DRY a
 ---
 
 ## ☁️ Remote Backend Expectations
-- `terraform/backend.config` stores backend settings (resource group, storage account, container, key).  
-- GitHub Actions pass this file to the orchestrator so every runner shares state.  
-- Grant your Service Principal **Storage Blob Data Contributor** on the storage account. (`docs/BOOTSTRAP_BACKEND.md` walks through everything.)
-- The workflows export `ARM_CLIENT_ID/SECRET/TENANT_ID/SUBSCRIPTION_ID` from your GitHub secrets so Terraform authenticates the backend with the same Service Principal. Keep those four secrets fresh and you’re done.
+- `terraform/backend.config` stores the Terraform Cloud organization and workspace mapping.  
+- GitHub Actions pass this file to the orchestrator so every runner shares the same remote state.  
+- Add a GitHub secret named `TF_API_TOKEN` containing a Terraform Cloud user token; workflows set it as `TF_API_TOKEN` for terraform init.  
+- The workflows also export `ARM_CLIENT_ID/SECRET/TENANT_ID/SUBSCRIPTION_ID` from your GitHub secrets so the Azure provider can authenticate with your Service Principal.
 
-Until you create the backend file, workflows fall back to local state (useful for quick experiments, but remote is required for production).
+Until you create the backend file, workflows fall back to local state (useful for quick experiments, but remote is required for production so destroy works anywhere).
 
 ---
 
@@ -117,7 +118,6 @@ Until you create the backend file, workflows fall back to local state (useful fo
 | ACR Basic | ~\$0.17/day when idle |
 | Container Apps Environment | Minimal while empty |
 | Log Analytics | Charged on ingestion/retention |
-| Storage Account (tfstate) | Pennies/month |
 
 Destroy dev workspaces when idle to keep spend near-zero.
 

@@ -1,0 +1,8 @@
+# Terraform Cloud backend config. Copy to backend.config and update the organization/prefix.
+hostname     = "app.terraform.io"
+organization = "CHANGE_ME_ORG"
+
+# Workspaces are derived from terraform workspace name (e.g., dev -> azure-infra-dev)
+workspaces = {
+  prefix = "azure-infra-cicd-"
+}

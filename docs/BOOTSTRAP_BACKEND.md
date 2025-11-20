@@ -1,82 +1,55 @@
-# Bootstrap Remote Terraform State (Azure Storage Backend)
+# Bootstrap Remote Terraform State (Terraform Cloud backend)
 
-The starter uses the `azurerm` backend so every GitHub Actions run can read/write the same Terraform state. Complete these one-time steps per subscription / environment.
+This starter now uses Terraform Cloud (TFC) for remote state so GitHub Actions can plan/apply/destroy reliably without managing Azure Storage manually. Complete these one-time steps per customer/org.
 
-## 1. Decide your naming
+## 1. Create / choose a Terraform Cloud organization
+- Sign in at [https://app.terraform.io](https://app.terraform.io)
+- Create an organization (e.g., `jtengineering`) if you don’t have one yet
 
-| Item | Example | Notes |
-| --- | --- | --- |
-| Resource group | `jteng-tfstate-rg` | Any region; only stores state |
-| Storage account | `jtengtfstate01` | Must be globally unique, 3-24 lowercase letters/numbers |
-| Container | `tfstate` | Standard blob container |
-| State key | `azure-infra-cicd-starter/dev.tfstate` | One key per workspace/environment |
+## 2. Create workspaces for each environment
+You can either:
+- Create a workspace per environment (e.g., `azure-infra-cicd-dev`, `azure-infra-cicd-prod`), or
+- Let Terraform manage them via a prefix.
 
-## 2. Create the resources
+This repo ships a backend config that expects the prefix `azure-infra-cicd-`. With that prefix, running `terraform workspace select dev` maps to the remote workspace `azure-infra-cicd-dev`. Create those workspaces once in the TFC UI.
 
-```bash
-# Variables to reuse
-TFSTATE_RG="jteng-tfstate-rg"
-TFSTATE_LOCATION="eastus"
-TFSTATE_SA="jtengtfstate01"
-TFSTATE_CONTAINER="tfstate"
+## 3. Generate a Terraform Cloud user/API token
+1. In the upper-right menu → **User Settings** → **Tokens**
+2. Create a new token (name it something like `github-actions`)
+3. Copy the token and add it to your GitHub repo secrets as `TF_API_TOKEN`
 
-az group create \
-  --name "$TFSTATE_RG" \
-  --location "$TFSTATE_LOCATION"
-
-az storage account create \
-  --name "$TFSTATE_SA" \
-  --resource-group "$TFSTATE_RG" \
-  --location "$TFSTATE_LOCATION" \
-  --sku Standard_LRS \
-  --kind StorageV2 \
-  --allow-blob-public-access false
-
-az storage container create \
-  --name "$TFSTATE_CONTAINER" \
-  --account-name "$TFSTATE_SA"
-```
-
-## 3. Grant access to the Service Principal / Federated Credential
-
-The identity used by GitHub Actions must be able to read/write blobs. Assign **Storage Blob Data Contributor** on the storage account:
-
-```bash
-AZURE_SP_OBJECT_ID="<service-principal-object-id>"
-
-az role assignment create \
-  --role "Storage Blob Data Contributor" \
-  --assignee-object-id "$AZURE_SP_OBJECT_ID" \
-  --assignee-principal-type ServicePrincipal \
-  --scope "/subscriptions/<SUB_ID>/resourceGroups/$TFSTATE_RG/providers/Microsoft.Storage/storageAccounts/$TFSTATE_SA"
-```
+> Every workflow already exports `TF_API_TOKEN` for the orchestrator. No other secrets are needed for state access.
 
 ## 4. Create `terraform/backend.config`
-
-Copy the example file and adjust the values:
+Copy the example file and set your organization/prefix (or workspace names if you prefer exact names):
 
 ```bash
 cp terraform/backend.config.example terraform/backend.config
 ```
 
-Edit `terraform/backend.config` with your names and preferred state key:
+Example contents:
 
 ```hcl
-resource_group_name  = "jteng-tfstate-rg"
-storage_account_name = "jtengtfstate01"
-container_name       = "tfstate"
-key                  = "azure-infra-cicd-starter/dev.tfstate"
-use_azuread_auth     = true
+hostname     = "app.terraform.io"
+organization = "jtengineering"
+
+workspaces = {
+  prefix = "azure-infra-cicd-"
+}
 ```
 
-`use_azuread_auth = true` tells Terraform to reuse the same Azure AD token issued via `azure/login@v2`, so no storage keys are required.
+If you want to pin explicit workspace names instead of prefixes, replace the block with:
 
-## 5. Reference the backend config in GitHub Actions
+```hcl
+workspaces = {
+  name = "azure-infra-cicd-dev"
+}
+```
 
-The repo workflows already pass `backend-config-file: backend.config` to the orchestrator action. As soon as the file exists in `terraform/`, every run will use remote state automatically.
+(Then duplicate the backend config per environment.)
 
-If you prefer a different path or multiple backends per environment, update the workflow input accordingly.
+## 5. Local `terraform login` (optional)
+If you plan to run Terraform locally, execute `terraform login` once so the CLI stores the token under `~/.terraform.d/credentials.tfrc.json`. GitHub Actions does not need this because it uses the `TF_API_TOKEN` secret directly.
 
-### ARM_* environment variables
-
-The workflows export `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_TENANT_ID`, and `ARM_SUBSCRIPTION_ID` from your GitHub secrets before calling Terraform. If you rename secrets or use different credential names, update the workflow environment so the backend can authenticate using the same Service Principal.
+## 6. Run the workflows
+With the backend config file present and `TF_API_TOKEN` set, any workflow that references the orchestrator will initialize the remote backend automatically. Apply/destroy will share state across runs without any Azure Storage prerequisites.

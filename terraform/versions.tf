@@ -1,7 +1,7 @@
 terraform {
   required_version = ">= 1.6.0"
 
-  backend "azurerm" {}
+  backend "remote" {}
 
   required_providers {
     azurerm = {
