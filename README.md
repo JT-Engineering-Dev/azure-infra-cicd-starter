@@ -39,7 +39,7 @@ flowchart TD
 ## 🏁 Quickstart
 
 1. **Bootstrap remote state**  
-   Follow [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md) to point Terraform at your Terraform Cloud organization/workspaces and copy `terraform/backend.config.example` → `terraform/backend.config`.
+   Follow [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md) to point Terraform at your Terraform Cloud organization/workspaces (CLI-driven workflow per environment) and copy `terraform/backend.config.example` → `terraform/backend.config`.
 
 2. **Create Azure Service Principal**  
    ```bash
