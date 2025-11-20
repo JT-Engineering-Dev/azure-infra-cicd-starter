@@ -1,4 +1,4 @@
-# Bootstrap Remote Terraform State (Terraform Cloud backend)
+# Setup Requirements (Terraform Cloud backend)
 
 This starter now uses Terraform Cloud (TFC) for remote state so GitHub Actions can plan/apply/destroy reliably without managing Azure Storage manually. Complete these one-time steps per customer/org.
 
