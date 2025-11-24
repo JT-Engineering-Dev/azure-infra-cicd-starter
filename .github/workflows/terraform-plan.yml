@@ -47,8 +47,8 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # 🧠 Shared Terraform orchestrator
-      - name: Terraform orchestrator
-        uses: JT-Engineering-Dev/terraform-orchestrator-action@v0.2.0
+      - name: JT Terraform Engine
+        uses: JT-Engineering-Dev/terraform-engine@v1
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}

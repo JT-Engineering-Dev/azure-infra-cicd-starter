@@ -143,7 +143,7 @@ The workflows reuse the same Azure login from `azure/login@v2`, so no extra secr
 
 ## Auth Today, OIDC Tomorrow
 - V1 uses Service Principal secrets for simplicity.  
-- Future release will add Federated Credentials (OIDC) so secrets disappear. The orchestrator/action layout already supports that swap.
+- Future release will add Federated Credentials (OIDC) so secrets disappear. The JT Terraform Engine layout already supports that swap.
 
 ---
 
@@ -161,7 +161,7 @@ Destroy dev workspaces when idle to keep spend near-zero.
 ## Roadmap
 - Key Vault module  
 - Private Endpoints + Private DNS  
-- AWS/GCP starter kits (reuse orchestrator)  
+- AWS/GCP starter kits (reuse JT Terraform Engine)  
 - Federated credentials (OIDC)  
 - Sample microservice deployment into CAE  
 - Optional add-on modules sold via GumRoad

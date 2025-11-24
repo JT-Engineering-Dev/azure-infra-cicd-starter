@@ -40,7 +40,7 @@ jobs:
 
 
       - name: Terraform destroy
-        uses: JT-Engineering-Dev/terraform-orchestrator-action@v0.2.0
+        uses: JT-Engineering-Dev/terraform-engine@v1
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}

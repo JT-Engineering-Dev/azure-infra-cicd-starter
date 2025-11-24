@@ -5,7 +5,7 @@ A minimal, production-grade Azure environment deployed via Terraform with GitHub
 ## Features
 - Remote Azure Storage backend (state shared across runs)
 - Modular Terraform (network, observability, container artifacts)
-- Prebuilt GitHub Actions (plan, plan+apply, destroy) that call this orchestrator action
+- Prebuilt GitHub Actions (plan, plan+apply, destroy) that call JT Terraform Engine
 - One-click tfstate bootstrap via `scripts/bootstrap-tfstate.sh` (optional repo variables)
 - Service principal or OIDC authentication
 - Example dev/prod tfvars + architecture diagram included
