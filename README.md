@@ -53,8 +53,9 @@ flowchart TD
    - `AZURE_SUBSCRIPTION_ID`
    > Keep the `AZURE_CLIENT_ID` handy—you’ll reuse it in the backend setup to look up the service principal’s object ID (`az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv`).
 
-2. **Bootstrap remote state**  
-   After you have the Service Principal (so you know its object ID), follow [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md) to provision the Azure Storage backend (resource group + storage account + container), grant the SP blob access, and copy `terraform/backend.config.example` → `terraform/backend.config`.
+2. **Configure remote state**  
+   - **Already have a Storage Account + container?** Just copy `terraform/backend.config.example` → `terraform/backend.config`, fill in your existing names, and (optionally) add repo Variables `TFSTATE_RG`, `TFSTATE_LOCATION`, `TFSTATE_SA`, `TFSTATE_CONTAINER`. The workflows run `scripts/bootstrap-tfstate.sh`, which will detect the resources and move on.
+   - **Need us to create one?** Follow [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md) once: paste the CLI snippet to provision the resource group/storage account/container, grant the SP blob access, and copy `backend.config`. Those repo Variables let the workflow keep everything in sync automatically afterwards.
 
 3. **Authenticate locally (optional sanity check)**  
    ```bash
