@@ -15,6 +15,8 @@ SUBSCRIPTION_ID="<YOUR_SUBSCRIPTION_ID>"
 # service principal object id (from README quickstart Step 1)
 AZURE_CLIENT_ID="<YOUR_SP_CLIENT_ID>"
 SP_OBJECT_ID=$(az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv)
+
+> Already have a storage account + container you want to reuse? Set these variables to those existing names (or create GitHub repo Variables with the same values). The workflows run `scripts/bootstrap-tfstate.sh`, which will simply detect they exist and move on, but the instructions below show what the script does under the hood.
 ```
 
 ## 2. Create the resource group + storage account + container
@@ -67,3 +69,13 @@ terraform plan -var-file=environments/dev.tfvars
 ```
 
 The GitHub workflows pass the same backend config and Terraform workspaces, so plan/apply/destroy work exactly the same on CI.
+
+### Optional: configure GitHub repo variables
+If you want each workflow run to double-check (or create) the backend automatically, go to **Settings → Variables** and add:
+
+- `TFSTATE_RG`
+- `TFSTATE_LOCATION`
+- `TFSTATE_SA`
+- `TFSTATE_CONTAINER`
+
+Set them to the same values you used above. The `scripts/bootstrap-tfstate.sh` step executed in every workflow will use those values; if the resources already exist it does nothing, otherwise it creates them idempotently before Terraform runs.

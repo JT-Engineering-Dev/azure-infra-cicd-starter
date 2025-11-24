@@ -99,6 +99,7 @@ All inputs are wired through `terraform/environments/*.tfvars` so you stay DRY a
 ## ☁️ Backend Setup (Azure Storage)
 - Terraform keeps its state in a Storage Account so every GitHub job sees the same resources and `destroy` works reliably.
 - Run the one-time bootstrap below (or copy it from [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md)), then copy `terraform/backend.config.example` to `terraform/backend.config` and update the names. Terraform automatically creates separate blobs per workspace (e.g., `env:dev/azure-infra-cicd-starter.tfstate`), so you only need one config file.
+- Already have a storage account/container? Just set the backend config to those names and (optionally) add GitHub repo **Variables** `TFSTATE_RG`, `TFSTATE_LOCATION`, `TFSTATE_SA`, `TFSTATE_CONTAINER`. Our workflows run `scripts/bootstrap-tfstate.sh` after `azure/login` which will detect existing resources or create them if missing.
 
 ```bash
 TFSTATE_LOCATION="eastus"
@@ -133,7 +134,8 @@ The workflows reuse the same Azure login from `azure/login@v2`, so no extra secr
 
 ## ⚙️ What the workflows do
 - Each workflow checks out the repo, logs in to Azure with your Service Principal, and runs Terraform **on the GitHub runner** using `terraform/environments/<env>.tfvars`.
-- State is stored in the Storage Account you bootstrapped above (`azure-infra-cicd-starter-<workspace>.tfstate` keys). Plan, apply, and destroy all share that state so resource changes stay consistent.
+- Immediately after login we run `scripts/bootstrap-tfstate.sh`, which uses the optional `TFSTATE_*` repo variables to ensure the configured resource group/storage account/container exist (it’s safe to point it at pre-existing resources).
+- State is stored in the Storage Account you bootstrapped above (`env:<workspace>/azure-infra-cicd-starter.tfstate` blobs). Plan, apply, and destroy all share that state so resource changes stay consistent.
 - To change infrastructure, edit the tfvars file (e.g., switch the prefix, location, SKUs), commit, and rerun the workflow for that environment. Terraform handles the diff automatically.
 
 ---

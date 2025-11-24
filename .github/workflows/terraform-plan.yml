@@ -36,6 +36,16 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           auth-type: service_principal
 
+      - name: Ensure tfstate backend (idempotent)
+        run: bash scripts/bootstrap-tfstate.sh
+        env:
+          TFSTATE_RG: ${{ vars.TFSTATE_RG }}
+          TFSTATE_LOCATION: ${{ vars.TFSTATE_LOCATION }}
+          TFSTATE_SA: ${{ vars.TFSTATE_SA }}
+          TFSTATE_CONTAINER: ${{ vars.TFSTATE_CONTAINER }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       # 🧠 Shared Terraform orchestrator
       - name: Terraform orchestrator
         uses: JT-Engineering-Dev/terraform-orchestrator-action@v0.2.0
