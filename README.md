@@ -1,4 +1,4 @@
-# 🚀 Azure Infra + CI/CD Starter (Terraform + GitHub Actions)
+# Azure Infra + CI/CD Starter (Terraform + GitHub Actions)
 ### Push-button Azure infrastructure for junior-to-mid engineers.
 
 This starter packs the Terraform modules, GitHub workflows, and documentation you need to ship a production-ready Azure landing zone with minimal manual setup. It is intentionally boring, modular, and easy to extend.
@@ -12,7 +12,7 @@ This starter packs the Terraform modules, GitHub workflows, and documentation yo
 
 ---
 
-## 🧱 Architecture Diagram
+## Architecture Diagram
 
 ```mermaid
 flowchart TD
@@ -85,7 +85,7 @@ Destroy workflow only asks for `environment` and always runs `terraform destroy`
 
 ---
 
-## 🧩 Terraform Modules
+## Terraform Modules
 | Module | Path | Purpose |
 | --- | --- | --- |
 | Networking | `terraform/modules/network` | VNet + subnets |
@@ -96,7 +96,7 @@ All inputs are wired through `terraform/environments/*.tfvars` so you stay DRY a
 
 ---
 
-## ☁️ Backend Setup (Azure Storage)
+## Backend Setup (Azure Storage)
 - Terraform keeps its state in a Storage Account so every GitHub job sees the same resources and `destroy` works reliably.
 - Run the one-time bootstrap below (or copy it from [`docs/SETUP_REQUIREMENTS.md`](docs/SETUP_REQUIREMENTS.md)), then copy `terraform/backend.config.example` to `terraform/backend.config` and update the names. Terraform automatically creates separate blobs per workspace (e.g., `env:dev/azure-infra-cicd-starter.tfstate`), so you only need one config file.
 - Already have a storage account/container? Just set the backend config to those names and (optionally) add GitHub repo **Variables** `TFSTATE_RG`, `TFSTATE_LOCATION`, `TFSTATE_SA`, `TFSTATE_CONTAINER`. Our workflows run `scripts/bootstrap-tfstate.sh` after `azure/login` which will detect existing resources or create them if missing.
@@ -140,13 +140,13 @@ The workflows reuse the same Azure login from `azure/login@v2`, so no extra secr
 
 ---
 
-## 🔐 Auth Today, OIDC Tomorrow
+## Auth Today, OIDC Tomorrow
 - V1 uses Service Principal secrets for simplicity.  
 - Future release will add Federated Credentials (OIDC) so secrets disappear. The orchestrator/action layout already supports that swap.
 
 ---
 
-## 💰 Cost Snapshot
+## Cost Snapshot
 | Resource | Cost Notes |
 | --- | --- |
 | ACR Basic | ~\$0.17/day when idle |
@@ -157,7 +157,7 @@ Destroy dev workspaces when idle to keep spend near-zero.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 - Key Vault module  
 - Private Endpoints + Private DNS  
 - AWS/GCP starter kits (reuse orchestrator)  
@@ -167,7 +167,7 @@ Destroy dev workspaces when idle to keep spend near-zero.
 
 ---
 
-## 📄 License
+## License
 MIT
 
 ## 💬 Support
